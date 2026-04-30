@@ -1,71 +1,635 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nu Global AG · Evidence Naming Tool</title>
-    <style>
-        body { font-family: sans-serif; background: #f8f7ff; padding: 40px; color: #1a1a2e; }
-        .container { max-width: 800px; margin: auto; background: white; padding: 30px; border-radius: 15px; shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid #e5e0f0; }
-        h1 { color: #820AD1; font-size: 24px; }
-        .step { margin-bottom: 20px; padding: 15px; border: 1px solid #eee; border-radius: 10px; }
-        button { background: #820AD1; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        button:hover { background: #6d07b0; }
-        select, input { width: 100%; padding: 10px; margin-top: 10px; border-radius: 5px; border: 1px solid #d1c4e9; }
-        .result { background: #f5f3ff; padding: 15px; border-radius: 8px; margin-top: 20px; font-family: monospace; border: 1px dashed #820AD1; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nu Global AG · goAML Evidence Naming Tool</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f8f7ff;color:#1a1a2e;min-height:100vh;padding:24px 16px;}
+  .wrap{max-width:740px;margin:0 auto;}
+  .card{background:#fff;border:1px solid #e5e0f0;border-radius:12px;padding:20px;margin-bottom:14px;}
+  h1{font-size:21px;font-weight:600;color:#1a1a2e;margin-bottom:2px;}
+  .nu{font-size:21px;font-weight:800;color:#820AD1;letter-spacing:-0.5px;}
+  .sub{font-family:monospace;font-size:11px;color:#7c3aed;letter-spacing:2px;text-transform:uppercase;}
+  .mono{font-family:monospace;font-size:11px;color:#6b7280;}
+  .btn-p{background:#820AD1;color:#fff;border:none;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:background .15s;}
+  .btn-p:hover{background:#6d07b0;}
+  .btn-p:disabled{background:#c4b5fd;cursor:not-allowed;}
+  .btn-g{background:#fff;border:1px solid #d1c4e9;color:#5b21b6;padding:8px 16px;border-radius:8px;font-size:13px;cursor:pointer;}
+  .btn-g:hover{background:#f5f3ff;}
+  .btn-dl{border:none;padding:7px 14px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;color:#fff;white-space:nowrap;transition:opacity .15s;}
+  .btn-dl:hover{opacity:.88;}
+  .btn-dl:disabled{opacity:.5;cursor:wait;}
+  .tag-m{background:#fef2f2;color:#991b1b;border:1px solid #fecaca;font-family:monospace;font-size:11px;padding:2px 7px;border-radius:5px;display:inline-block;}
+  .tag-o{background:#f5f3ff;color:#5b21b6;border:1px solid #ddd6fe;font-family:monospace;font-size:11px;padding:2px 7px;border-radius:5px;display:inline-block;}
+  .tag-c{background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;font-family:monospace;font-size:11px;padding:2px 7px;border-radius:5px;display:inline-block;}
+  .tag-v{background:#fff7ed;color:#9a3412;border:1px solid #fed7aa;font-family:monospace;font-size:11px;padding:2px 7px;border-radius:5px;display:inline-block;}
+  .tag-g{background:#f0fdf4;color:#14532d;border:1px solid #86efac;font-family:monospace;font-size:11px;padding:2px 7px;border-radius:5px;display:inline-block;}
+  .tag-legal{background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe;font-family:monospace;font-size:11px;padding:2px 7px;border-radius:5px;display:inline-block;}
+  .step-dot{width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;border:2px solid;flex-shrink:0;}
+  select,input[type=text],input[type=date]{background:#fff;border:1px solid #d1c4e9;border-radius:8px;padding:8px 11px;font-size:13px;color:#1a1a2e;width:100%;outline:none;font-family:inherit;}
+  select:focus,input:focus{border-color:#820AD1;box-shadow:0 0 0 3px rgba(130,10,209,.1);}
+  .fcard{border:1px solid #e5e0f0;border-radius:10px;padding:14px;margin-bottom:10px;background:#faf9ff;}
+  .fcard.done{border-color:#16a34a;background:#f0fdf4;}
+  .fcard.err{border-color:#dc2626;background:#fef2f2;}
+  .preview{font-family:monospace;font-size:11px;color:#5b21b6;background:#f5f3ff;padding:8px 12px;border-radius:7px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;border:1px solid #ddd6fe;}
+  .note{font-size:11px;color:#374151;background:#faf5ff;border:1px solid #e9d5ff;border-radius:6px;padding:8px 11px;margin:8px 0;line-height:1.5;}
+  .dz{border:2px dashed #d1c4e9;border-radius:10px;padding:24px;text-align:center;cursor:pointer;margin-bottom:14px;transition:border-color .15s;}
+  .dz:hover{border-color:#820AD1;background:#faf5ff;}
+  .crow{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid #f0ebfa;}
+  .crow:last-child{border-bottom:none;}
+  .type-btn{text-align:left;padding:20px;border-radius:12px;border:2px solid #e5e0f0;background:#faf9ff;cursor:pointer;width:100%;transition:border-color .15s;}
+  .type-btn:hover{border-color:#820AD1;background:#f5f3ff;}
+  .scen-btn{width:100%;text-align:left;padding:16px;border-radius:12px;border:2px solid #e5e0f0;background:#faf9ff;cursor:pointer;margin-bottom:10px;transition:all .15s;}
+  .scen-btn:hover{border-color:#820AD1;background:#f5f3ff;box-shadow:0 2px 8px rgba(130,10,209,.07);}
+  .warn{border-radius:10px;border:1px solid #fecaca;background:#fef2f2;padding:14px;font-size:12px;color:#991b1b;margin-bottom:14px;}
+  .goaml-tip{border-radius:10px;border:1px solid #e5e0f0;background:#f9fafb;padding:14px;font-size:12px;color:#374151;margin-bottom:14px;}
+  .dl-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+  label.lbl{font-size:11px;color:#6b7280;display:block;margin-bottom:5px;font-family:monospace;}
+  .tags-wrap{display:flex;flex-wrap:wrap;gap:4px;}
+  .scen-panel{background:#f5f3ff;border:1px solid #ddd6fe;border-radius:10px;padding:14px;}
+  .code-section-label{font-size:10px;color:#9ca3af;font-family:monospace;font-weight:700;letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px;}
+  .codes-row{display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin-bottom:8px;}
+  .codes-row-label{font-size:10px;color:#9ca3af;font-family:monospace;font-weight:600;margin-right:4px;text-transform:uppercase;letter-spacing:.5px;flex-shrink:0;}
+
+  /* Evidence checklist panel */
+  .checklist-card{border-radius:12px;padding:18px;margin-bottom:14px;border:2px solid;}
+  .checklist-card.complete{border-color:#16a34a;background:#f0fdf4;}
+  .checklist-card.incomplete{border-color:#dc2626;background:#fef2f2;}
+  .checklist-card.partial{border-color:#d97706;background:#fffbeb;}
+  .checklist-card.empty{border-color:#e5e0f0;background:#faf9ff;}
+  .chk-row{display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid rgba(0,0,0,.05);}
+  .chk-row:last-child{border-bottom:none;}
+  .chk-icon{font-size:14px;flex-shrink:0;margin-top:1px;width:18px;text-align:center;}
+  .chk-label{font-size:12px;font-weight:600;color:#1a1a2e;}
+  .chk-sub{font-size:11px;color:#6b7280;margin-top:1px;line-height:1.4;}
+  .chk-badge{font-family:monospace;font-size:10px;padding:1px 6px;border-radius:4px;font-weight:700;flex-shrink:0;margin-top:2px;}
+  .chk-badge.req{background:#fef2f2;color:#991b1b;border:1px solid #fecaca;}
+  .chk-badge.opt{background:#f5f3ff;color:#5b21b6;border:1px solid #ddd6fe;}
+  .chk-badge.done{background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;}
+  .status-bar{display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:12px;border-bottom:2px solid rgba(0,0,0,.06);}
+  .status-icon{font-size:28px;flex-shrink:0;}
+  .status-title{font-size:15px;font-weight:700;}
+  .status-sub{font-size:12px;margin-top:2px;}
+  .prog-wrap{height:6px;background:rgba(0,0,0,.08);border-radius:3px;margin-bottom:14px;overflow:hidden;}
+  .prog-bar{height:100%;border-radius:3px;transition:width .3s;}
+</style>
 </head>
 <body>
-    <div class="container">
-        <div style="display:flex; align-items:center; gap:10px;">
-            <span style="color:#820AD1; font-weight:800; font-size:28px;">Nu</span>
-            <h1 style="margin:0;">Evidence Naming Tool</h1>
-        </div>
-        <p style="color:#6b7280;">Standardize your goAML Switzerland filings.</p>
-        
-        <div class="step">
-            <h3>1. Select B-Code (Evidence Category)</h3>
-            <select id="bcode">
-                <option value="3001B">3001B · Identification documents</option>
-                <option value="3007B">3007B · Account statements</option>
-                <option value="3008B">3008B · Transaction details</option>
-                <option value="3009B">3009B · Evidence of suspicion</option>
-                <option value="3010B">3010B · Clarification records (Mandatory)</option>
-            </select>
-        </div>
+<div class="wrap">
 
-        <div class="step">
-            <h3>2. File Description</h3>
-            <input type="text" id="desc" placeholder="e.g. Passport_Client_X">
-        </div>
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:22px;">
+    <div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+        <span class="nu">Nu</span>
+        <span class="sub">Global AG · goAML</span>
+      </div>
+      <h1>Evidence naming tool</h1>
+      <div class="mono" style="margin-top:3px;">YYYYMMDD_[B-Code]_[Description].[ext]</div>
+    </div>
+    <button class="btn-g" id="resetBtn" style="display:none;" onclick="reset()">↩ Reset</button>
+  </div>
 
-        <div class="step">
-            <h3>3. Report Date</h3>
-            <input type="date" id="date">
-        </div>
+  <div style="display:flex;align-items:center;gap:0;margin-bottom:22px;">
+    <div style="display:flex;align-items:center;gap:7px;">
+      <div class="step-dot" id="d1" style="background:#820AD1;border-color:#820AD1;color:#fff;">1</div>
+      <span style="font-size:13px;font-weight:500;" id="l1">Type</span>
+    </div>
+    <div style="width:32px;height:1px;background:#e5e0f0;margin:0 4px;"></div>
+    <div style="display:flex;align-items:center;gap:7px;">
+      <div class="step-dot" id="d2" style="background:#f5f3ff;border-color:#d1c4e9;color:#9ca3af;">2</div>
+      <span style="font-size:13px;color:#9ca3af;" id="l2">Scenario</span>
+    </div>
+    <div style="width:32px;height:1px;background:#e5e0f0;margin:0 4px;"></div>
+    <div style="display:flex;align-items:center;gap:7px;">
+      <div class="step-dot" id="d3" style="background:#f5f3ff;border-color:#d1c4e9;color:#9ca3af;">3</div>
+      <span style="font-size:13px;color:#9ca3af;" id="l3">Files</span>
+    </div>
+  </div>
 
-        <button onclick="generateName()">Generate File Name</button>
+  <!-- Step 1 -->
+  <div id="s1">
+    <div class="card">
+      <div style="font-size:15px;font-weight:600;margin-bottom:6px;">Report type?</div>
+      <div style="font-size:13px;color:#6b7280;margin-bottom:18px;">Did funds move? → STR &nbsp;·&nbsp; Suspicious activity only, no movement? → SAR</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <button class="type-btn" onclick="pickType('STR')">
+          <div style="font-size:24px;margin-bottom:8px;">💸</div>
+          <div style="font-size:18px;font-weight:700;color:#1a1a2e;">STR</div>
+          <div style="font-size:12px;color:#6b7280;margin-top:3px;">Funds have moved</div>
+          <div style="font-size:11px;color:#9ca3af;margin-top:6px;line-height:1.5;">Crypto outbound · Internal swaps · P2P smurfing · Dirty fiat entry · Gateway laundering</div>
+        </button>
+        <button class="type-btn" onclick="pickType('SAR')">
+          <div style="font-size:24px;margin-bottom:8px;">🔍</div>
+          <div style="font-size:18px;font-weight:700;color:#1a1a2e;">SAR</div>
+          <div style="font-size:12px;color:#6b7280;margin-top:3px;">No funds movement required</div>
+          <div style="font-size:11px;color:#9ca3af;margin-top:6px;line-height:1.5;">Adverse media · Sanctions/TF match · Aborted onboarding · KYC discrepancy</div>
+        </button>
+      </div>
+    </div>
+  </div>
 
-        <div id="output" class="result" style="display:none;">
-            <strong>Result:</strong> <span id="finalName"></span>
+  <!-- Step 2 -->
+  <div id="s2" style="display:none;">
+    <div class="card">
+      <div style="font-size:15px;font-weight:600;margin-bottom:4px;">Select scenario</div>
+      <div style="font-size:12px;color:#6b7280;margin-bottom:16px;">Each card shows the MROS typology, applicable codes (hover for descriptions), and an example trigger to guide your filing.</div>
+      <div id="scenList"></div>
+      <button class="btn-g" onclick="goStep(1)" style="margin-top:4px;">← Back</button>
+    </div>
+  </div>
+
+  <!-- Step 3 -->
+  <div id="s3" style="display:none;">
+
+    <div class="card">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:14px;">
+        <div>
+          <label class="lbl">Report date</label>
+          <input type="date" id="repDate">
         </div>
+        <div>
+          <label class="lbl">Active scenario</label>
+          <div style="font-size:12px;font-weight:600;color:#5b21b6;" id="scenLbl"></div>
+        </div>
+      </div>
+      <div class="scen-panel" id="scenPanel" style="display:none;">
+        <div style="font-size:13px;font-weight:700;color:#5b21b6;margin-bottom:6px;" id="panelTitle"></div>
+        <div style="font-size:12px;color:#374151;line-height:1.55;margin-bottom:10px;" id="panelSummary"></div>
+        <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:10px;">
+          <div><span class="code-section-label">V-Codes — Predicate Offence</span><div class="tags-wrap" id="panelVCodes"></div></div>
+          <div><span class="code-section-label">G-Codes — Ground / Reason</span><div class="tags-wrap" id="panelGCodes"></div></div>
+          <div><span class="code-section-label">M-Codes — Legal Basis</span><div class="tags-wrap" id="panelMCodes"></div></div>
+        </div>
+        <div style="padding:9px 11px;background:#fff;border:1px solid #e9d5ff;border-radius:7px;">
+          <div style="font-size:10px;font-family:monospace;color:#7c3aed;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;">📋 Example trigger narrative</div>
+          <div style="font-size:11px;color:#374151;line-height:1.6;font-style:italic;" id="panelExample"></div>
+        </div>
+      </div>
     </div>
 
-    <script>
-        // Lógica simple para que funcione de inmediato
-        document.getElementById('date').valueAsDate = new Date();
-        
-        function generateName() {
-            const date = document.getElementById('date').value.replace(/-/g, '');
-            const bcode = document.getElementById('bcode').value;
-            const desc = document.getElementById('desc').value.trim().replace(/\s+/g, '_');
-            
-            if(!desc) { alert("Please enter a description"); return; }
-            
-            const result = `${date}_${bcode}_${desc}.pdf`;
-            document.getElementById('finalName').innerText = result;
-            document.getElementById('output').style.display = 'block';
-        }
-    </script>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <span style="font-size:14px;font-weight:600;">Required B-Codes</span>
+        <span class="mono" id="covStat"></span>
+      </div>
+      <div id="codeList"></div>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <span style="font-size:14px;font-weight:600;">Files</span>
+        <span style="font-size:11px;color:#6b7280;">PDF · JPG · PNG · any format</span>
+      </div>
+      <div class="dz" id="dz" onclick="document.getElementById('fi').click()">
+        <div style="font-size:24px;margin-bottom:6px;">📁</div>
+        <p style="font-size:13px;color:#6b7280;">Drag files here or <span style="color:#820AD1;text-decoration:underline;cursor:pointer;">browse</span></p>
+        <p style="font-size:11px;color:#9ca3af;margin-top:4px;">Images can also be downloaded as PDF</p>
+        <input type="file" id="fi" multiple style="display:none;" onchange="addFiles(this.files)">
+      </div>
+      <div id="flist"></div>
+    </div>
+
+    <div class="card" id="dlAll" style="display:none;">
+      <div class="dl-bar">
+        <div>
+          <div style="font-size:14px;font-weight:600;">Download all</div>
+          <div style="font-size:11px;color:#6b7280;margin-top:2px;" id="dlAllSub"></div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn-p" style="font-size:12px;padding:8px 14px;" onclick="downloadAllOriginal()">⬇ All (Original)</button>
+          <button class="btn-p" style="font-size:12px;padding:8px 14px;background:#5b21b6;" onclick="downloadAllPdf()">⬇ All (PDF)</button>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- Evidence Checklist -->
+    <div id="evidenceChecklist" style="display:none;"></div>
+
+    <div class="warn" id="warn3010" style="display:none;">
+      ⛔ <strong>3010B — Clarification Records</strong> is mandatory in every report. Without this file the Attachments tab in goAML will remain <strong>Red</strong>.
+    </div>
+
+    <div class="goaml-tip">
+      <div style="font-weight:600;color:#1a1a2e;margin-bottom:8px;">📋 In goAML — SOP §3.5.3</div>
+      <ol style="padding-left:18px;line-height:2;color:#374151;">
+        <li>Attachments tab → <strong>Add Attachment</strong> (+ icon)</li>
+        <li><strong>Identification</strong> field: enter the exact B-Code (e.g. <code style="background:#f3f4f6;padding:1px 5px;border-radius:4px;">3010B</code>)</li>
+        <li>Upload the file with the name generated here</li>
+        <li>The tab turns <strong style="color:#16a34a;">green</strong> when all files have a B-Code assigned</li>
+      </ol>
+    </div>
+
+    <button class="btn-g" onclick="goStep(2)">← Change scenario</button>
+  </div>
+
+</div>
+<script>
+const BCAT={"3001B":"Identification documents","3002B":"Relationship establishment","3004B":"Standard forms (Form A/K)","3005B":"Ownership/control docs","3006B":"Balance overview","3007B":"Account statements","3008B":"Transaction details","3009B":"Evidence of suspicion","3010B":"Clarification records","3012B":"KYC documentation","3013B":"EDD documentation","3014B":"Debit advice","3017B":"Art. 11a §1/3 AMLA","3018B":"Art. 11a §2/3 AMLA","3023B":"Proof of balance (Art. 9b)"};
+
+const SC={
+  STR:[
+    {id:"s1",icon:"🔗",name:"S1 · Crypto Outbound — Illicit Destination",typology:"External Movement",
+     summary:"Customer sends crypto to an external wallet flagged by KYT analytics (Chainalysis/TRM) as linked to illicit infrastructure — mixers, darknet markets, ransomware clusters, or sanctioned addresses. The platform blocks the transaction and files an STR after the client fails the Travel Rule / Satoshi Test.",
+     vCodes:[{c:"1206V",l:"Money laundering (general) — use when mixer/tumbler link confirmed but predicate not identifiable"},{c:"1003V",l:"Unauthorized data access — mandatory when wallet linked to confirmed exchange hack"},{c:"1007V",l:"Extortion / ransomware — mandatory when wallet is a confirmed ransomware payment address"},{c:"1004V",l:"Fraud — use when wallet linked to phishing or social engineering scam infrastructure"},{c:"1005V",l:"Computer fraud — for smart contract exploits or DeFi attack proceeds"},{c:"1014V",l:"Financing terrorism — mandatory if TF link confirmed"},{c:"1116V",l:"International sanctions — mandatory if counterparty wallet on SECO/OFAC/UN/EU lists"},{c:"1013V",l:"Criminal organisation — when KYT clusters wallet as part of coordinated mule network / peeling chain"},{c:"1131V",l:"Not classifiable — last resort when high suspicion exists but no specific offence can be assigned"}],
+     gCodes:[{c:"2018G",l:"Transaction monitoring — MANDATORY. Document the KYT tool alert (Chainalysis/TRM/Elliptic), risk score, and cluster category"},{c:"2013G",l:"High-risk countries — MANDATORY if applicable. Counterparty VASP in FATF grey/black-listed jurisdiction or SECO embargo country"},{c:"2022G",l:"Economic background — use when transfer amount or destination is inconsistent with declared profile"},{c:"2009G",l:"Third-party information — use when corroborated by fraud recall from another VASP, Travel Rule rejection, or victim report"},{c:"2017G",l:"Smurfing — use when peeling chain detected: transfer is one of many small outputs from same source wallet"},{c:"2003G",l:"Various — add when suspicion arises from combination of factors: medium KYT score + incomplete Travel Rule data + unusual timing"}],
+     mCodes:[{c:"0002M",l:"Art. 9 §1a AMLA — PRIMARY. Blockchain analytics confirms wallet linked to illicit sources or Travel Rule data refused/incomplete"},{c:"0003M",l:"Art. 9 §1b AMLA — PRIMARY. KYT confirms specific predicate offence origin (ransomware wallet, hack proceeds). File alongside 0002M"},{c:"0004M",l:"Art. 9 §1c AMLA — PRIMARY if TF. Mandatory when destination/source wallet linked to designated terrorist entity or sanctioned address"},{c:"0001M",l:"Art. 305ter §2 SCC — SITUATIONAL. Medium-risk KYT score without confirmed illicit link (slight suspicion only)"},{c:"0024M",l:"Art. 9b AMLA — FOLLOW-UP. File when relationship formally terminated following mandatory 0002M/0003M/0004M report"},{c:"0023M",l:"Art. 305ter §2bis SCC — FOLLOW-UP. File when relationship terminated following voluntary 0001M report"}],
+     example:"On 05.04.2026, our automated transaction monitoring system flagged an outbound transfer of 1.45 BTC (equiv. CHF 92,450) under TXID: d7b8a9c2e1f4...b3a1. The assets were directed to unhosted wallet 0x71C...3a2. Blockchain analytics via Chainalysis indicate the destination cluster is associated with Hydra Market (Darknet Marketplace). The transaction represented 85% of total account volume for the current month and 200% of the client's declared monthly income of CHF 5,000.",
+     codes:[{c:"3008B",m:true,n:"MANDATORY. Full tx record: TXID, blockchain, wallet addresses (sender and recipient), amount, timestamp, and fee. The core STR evidence anchor."},{c:"3009B",m:true,n:"MANDATORY. KYT tool report (Chainalysis graph, TRM risk assessment, Elliptic cluster analysis) showing the illicit source link. Attach the full PDF output."},{c:"3010B",m:true,n:"MANDATORY. Internal analyst note documenting the Travel Rule request, the customer's response or refusal, and the decision to file."},{c:"3007B",m:false,n:"Transaction history showing the pattern of transfers — essential for smurfing or peeling chain typologies where the STR covers a series of transactions."},{c:"3012B",m:false,n:"Customer KYC file — allows MROS to assess whether the transfer is consistent with the declared profile and business purpose."},{c:"3006B",m:false,n:"Current asset balance as of reporting date — mandatory if a blocking action is triggered simultaneously with the STR."},{c:"3023B",m:false,n:"Mandatory ONLY if relationship is terminated — attach the final balance confirmation with the 0024M follow-up filing."}]},
+
+    {id:"s2",icon:"🔄",name:"S2 · Internal Layering — Rapid Swap",typology:"Internal Layering",
+     summary:"Customer executes a rapid crypto-to-crypto swap sequence (e.g. USDC → ETH → XMR/USDT) within minutes with no plausible investment rationale, often at a net loss. Mirrors the MROS Internal Layering typology: using the exchange function to sever the forensic trail of tainted assets.",
+     vCodes:[{c:"1206V",l:"Money laundering (general) — PRIMARY. Rapid cycling at a loss with no investment rationale is textbook layering"},{c:"1004V",l:"Fraud — use when asset being swapped is traced to scam proceeds (romance scam, phishing BTC being converted)"},{c:"1005V",l:"Computer fraud — input asset originates from smart contract exploit or DeFi attack being swapped to obscure provenance"},{c:"1141V",l:"Market manipulation — use when swap pattern constitutes wash trading: fictitious volume via repeated swaps"},{c:"1013V",l:"Criminal organisation — when multiple accounts perform identical swap pattern simultaneously (coordinated layering)"},{c:"1131V",l:"Not classifiable — last resort when swap pattern is clearly suspicious but predicate cannot be determined"}],
+     gCodes:[{c:"2018G",l:"Transaction monitoring — MANDATORY. Document the TMS alert: specific rule name, alert ID, and threshold breached"},{c:"2008G",l:"Currency exchange — MANDATORY. Unusual or rapid conversion without clear investment purpose is the core suspicion factor"},{c:"2022G",l:"Economic background — use when swap volume is inconsistent with declared income (e.g. student swapping millions in stablecoins)"},{c:"2004G",l:"Transitory / suspense account — use when assets are swapped and immediately transferred out with no holding period"},{c:"2017G",l:"Smurfing — use when swap is part of a series of small exchanges to stay below internal velocity thresholds"},{c:"2021G",l:"Securities — use when swap pattern constitutes market manipulation: wash trading or fictitious volume generation"}],
+     mCodes:[{c:"0002M",l:"Art. 9 §1a AMLA — PRIMARY. Swap pattern is well-founded ML: layering via privacy coin, USDT/USDC cycling at loss, or swap followed by immediate external withdrawal"},{c:"0003M",l:"Art. 9 §1b AMLA — SITUATIONAL. Asset being swapped confirmed derived from specific predicate (e.g. BTC from ransomware wallet → Monero)"},{c:"0001M",l:"Art. 305ter §2 SCC — SITUATIONAL. Routine low-risk swap unusual in volume or asset choice but below Art. 9 threshold. Requires specific triggering swap — cannot be used for general pattern"},{c:"0024M",l:"Art. 9b AMLA — FOLLOW-UP. File when relationship terminated following mandatory report triggered by exchange activity"},{c:"0023M",l:"Art. 305ter §2bis SCC — FOLLOW-UP. File when relationship terminated following voluntary 0001M report on the exchange"}],
+     example:"On 09.04.2026, our automated TMS flagged rapid internal swaps of 45,000 USDC (equiv. CHF 40,100) under Internal Swap IDs: SWP-9921-X and SWP-9922-X. The client converted USDC → 22.4 ETH, then within 12 minutes converted the full ETH balance into XMR and USDT. Internal ledger analysis indicates the initial USDC had a high hop count from a known unregulated exchange. The activity represented 100% of quarterly account volume and resulted in a net loss of CHF 1,200, suggesting intent to obscure the asset trail rather than seek profit.",
+     codes:[{c:"3008B",m:true,n:"MANDATORY. Full exchange records for BOTH legs: input asset, output asset, amounts, exchange rate applied, timestamp, and internal transaction IDs. Both legs must be linked in goAML."},{c:"3010B",m:true,n:"MANDATORY. Internal documentation of the analyst's assessment — why the swap pattern is suspicious, what economic rationale the customer provided (or failed to provide), and the filing decision."},{c:"3007B",m:true,n:"MANDATORY for pattern typologies. Full exchange history showing the complete swap sequence — essential for wash trading, cycling, and rapid value change typologies where the series is the evidence."},{c:"3009B",m:false,n:"KYT report if the input asset has a flagged provenance. TMS alert printout showing the rule triggered. Attach both if applicable."},{c:"3012B",m:false,n:"Customer profile — allows MROS to assess whether the swap volume and asset type are consistent with declared business activity and risk classification."},{c:"3013B",m:false,n:"Attach if an enhanced due diligence review was performed following the exchange alert — particularly relevant for HIGH-risk customers."}]},
+
+    {id:"s3",icon:"🕸️",name:"S3 · P2P Smurfing — Consolidation",typology:"Smurfing / Structuring",
+     summary:"A 'Gatherer' account receives multiple sub-threshold P2P transfers from distinct Nu Global retail accounts — each just below the CHF 10,000 EDD threshold — then consolidates and forwards externally. A classic money mule network indicator. The STR must cover BOTH the sender and recipient relationships.",
+     vCodes:[{c:"1013V",l:"Criminal organisation — PRIMARY for coordinated networks. Mandatory when P2P pattern reveals money mule network: multiple senders feeding one aggregator"},{c:"1004V",l:"Fraud — PRIMARY for scam proceeds. Sending account receives scam victim funds and P2P transfers to complicit recipient"},{c:"1001V",l:"Misappropriation — use when sender was entrusted with assets (fiduciary/agent) and transfers to personal/associated account without authorisation"},{c:"1206V",l:"Money laundering (general) — use when pass-through nature is confirmed but underlying predicate not identifiable from account data"},{c:"1138V",l:"Forgery of documents — use when either account's onboarding documents are found forged during P2P investigation"},{c:"1131V",l:"Not classifiable — last resort when both accounts are clearly suspicious but no specific predicate can be attributed"}],
+     gCodes:[{c:"2018G",l:"Transaction monitoring — MANDATORY. Internal TMS velocity alert or aggregation rule. Document rule ID, alert date, and both account references"},{c:"2017G",l:"Smurfing — MANDATORY for structuring typology. Multiple small transfers designed to stay below thresholds. Document threshold and individual amounts"},{c:"2004G",l:"Transitory / suspense account — MANDATORY for pass-through. Receiving account immediately re-transfers onward — functions as relay, not destination"},{c:"2022G",l:"Economic background — transfer amount inconsistent with either account's declared profile, no plausible legitimate explanation"},{c:"2006G",l:"Opening of account — receiving account recently opened, no activity other than receiving this transfer: purpose-built mule indicator"},{c:"2009G",l:"Third-party information — external source (fraud recall, victim report, another institution) links one account to known fraud infrastructure"},{c:"2010G",l:"Information from corporate group — link between suspicious accounts identified through internal data sharing between Nu Global entities"}],
+     mCodes:[{c:"0002M",l:"Art. 9 §1a AMLA — PRIMARY. Core mandatory code covering BOTH sender and recipient. STR must document suspicious nature of both accounts"},{c:"0003M",l:"Art. 9 §1b AMLA — SITUATIONAL. P2P transfer linked to specific predicate: one account is known scam recipient funnelling proceeds to accomplice"},{c:"0001M",l:"Art. 305ter §2 SCC — SITUATIONAL. Both accounts show slight suspicion — unusual transfer but no confirmed ML link"},{c:"0005M",l:"Art. 16 §1a AMLA — SITUATIONAL. Receiving account created specifically for transfer and KYC fails mid-process"},{c:"0024M",l:"Art. 9b AMLA — FOLLOW-UP. File for each account terminated. If both closed: two 0024M filings required — one per relationship"},{c:"0023M",l:"Art. 305ter §2bis SCC — FOLLOW-UP. File when one or both relationships terminated following voluntary 0001M report"}],
+     example:"Between 05.04.2026 and 11.04.2026, our TMS flagged 14 incoming internal P2P transfers totaling CHF 13,300 (IDs: P2P-501 through P2P-514) from 14 distinct retail accounts. Internal ledger analysis shows each transfer was for an identical CHF 950 — consolidated at average 4-hour intervals. This represents 950% of the client's declared monthly income of CHF 4,000. The client's explanation ('repayments for a group dinner') is logically inconsistent with the total amount and the number of distinct senders.",
+     codes:[{c:"3008B",m:true,n:"MANDATORY. All individual transfer records between the two accounts — amounts, timestamps, asset types, and internal transaction IDs. For smurfing typologies, each transfer must be listed separately."},{c:"3010B",m:true,n:"MANDATORY. Internal documentation covering BOTH accounts — the analyst's assessment of each party's suspicious activity and the link between them."},{c:"3007B",m:true,n:"MANDATORY for BOTH accounts. Full transaction history for the sender and recipient — MROS needs to assess the full picture of both relationships, not just the P2P transfer in isolation."},{c:"3012B",m:true,n:"MANDATORY for BOTH accounts. Full KYC files for both the sender and recipient — attach separately and clearly label each party."},{c:"3001B",m:false,n:"Identity documents for both parties — particularly important if either account shows onboarding anomalies or forged documents."},{c:"3009B",m:false,n:"TMS alert printouts, KYT reports, adverse media, or fraud recalls that link either account to illicit activity."},{c:"3023B",m:false,n:"Required for each account terminated — if both relationships are closed, attach two separate balance confirmations with the corresponding 0024M filings."}]},
+
+    {id:"s4",icon:"🏦",name:"S4 · Dirty Fiat Entry — 3rd-party / High-risk Origin",typology:"Dirty Fiat Entry",
+     summary:"A large fiat transfer arrives from a third-party sender with no documented nexus — often a shell company in an offshore or high-risk jurisdiction. Source of funds documentation is absent or implausible. This is the placement stage: criminal fiat entering the VASP before conversion to crypto.",
+     vCodes:[{c:"1004V",l:"Fraud — MOST COMMON. Fiat proceeds from phishing, romance scams, investment fraud or social engineering being deposited before crypto purchase"},{c:"1206V",l:"Money laundering (general) — use when fiat clearly a placement step but no specific predicate can be established from payment data"},{c:"1130V",l:"Aggravated tax misdemeanor — MANDATORY if SOW investigation reveals undeclared assets/income indicating tax evasion >CHF 300k"},{c:"1139V",l:"Corruption — use when fiat source linked to PEP or public official: bribery proceeds being converted to crypto"},{c:"1116V",l:"International sanctions — MANDATORY when ordering account or counterparty bank is on SECO/OFAC/UN lists"},{c:"1013V",l:"Criminal organisation — fiat inflow structured across multiple payments from different senders: coordinated placement by organised group"},{c:"1147V",l:"Bankruptcy/debt crimes — fiat source involves concealed assets from bankruptcy or insolvency proceeding"},{c:"1131V",l:"Not classifiable — last resort when fiat inflow is clearly suspicious but no specific predicate identifiable from payment data"}],
+     gCodes:[{c:"2018G",l:"Transaction monitoring — MANDATORY. Document the TMS alert: rule name, alert ID, amount threshold, date generated"},{c:"2022G",l:"Economic background — MANDATORY. Inflow amount or frequency inconsistent with declared income, business, or source of wealth"},{c:"2017G",l:"Smurfing — fiat structured across multiple smaller payments to stay below CHF 1,000 or CHF 25,000 thresholds"},{c:"2013G",l:"High-risk countries — fiat originates from FATF grey/black list jurisdiction, SECO embargo country, or bank with known AML deficiencies"},{c:"2004G",l:"Transitory / suspense account — fiat received and immediately applied to crypto purchase with no holding period"},{c:"2009G",l:"Third-party information — fraud recall from sending bank, victim report, or information from another institution triggers review"},{c:"2012G",l:"Loan transaction — fiat source claimed to be a loan but lender, terms, or repayment structure are unclear or implausible"}],
+     mCodes:[{c:"0002M",l:"Art. 9 §1a AMLA — PRIMARY. Mandatory when fiat inflow is well-founded ML: source unverified, high-risk jurisdiction, or pattern inconsistent with declared profile"},{c:"0003M",l:"Art. 9 §1b AMLA — SITUATIONAL. Fiat funds traceable to specific predicate offence (confirmed fraud scheme proceeds deposited before crypto purchase)"},{c:"0004M",l:"Art. 9 §1c AMLA — SITUATIONAL. Fiat sender or ordering bank account linked to sanctioned individual or terrorist organisation"},{c:"0001M",l:"Art. 305ter §2 SCC — SITUATIONAL. Fiat slightly suspicious: documentation present but incomplete, or amount at upper edge of normal range"},{c:"0024M",l:"Art. 9b AMLA — FOLLOW-UP. File when relationship terminated following mandatory report on fiat payment leg"},{c:"0023M",l:"Art. 305ter §2bis SCC — FOLLOW-UP. File when relationship terminated following voluntary 0001M report on this payment"}],
+     example:"On 10.04.2026, our TMS flagged an inbound fiat transfer of CHF 195,000 (Bank Reference: NU-FIAT-99821) from a corporate account at Santander, Spain. Banking layer review indicates the remitting entity 'Global Logistics & Trade Ltd' has no documented nexus to the account holder, is mentioned in adverse media linked to offshore shell networks, and this single deposit represents 100% of the account's total funding to date — representing 300% of the client's declared annual income of CHF 65,000.",
+     codes:[{c:"3008B",m:true,n:"MANDATORY. Full payment record for the fiat leg: payment reference, ordering IBAN, beneficiary IBAN (custody account), amount, value date, currency, and correspondent bank. This is the STR transaction anchor."},{c:"3010B",m:true,n:"MANDATORY. Internal documentation of the source of funds review — what was requested, what the customer provided, and why it was insufficient or inconsistent."},{c:"3013B",m:true,n:"MANDATORY if EDD performed. The full EDD report on source of funds — attach all supporting documents reviewed including payslips, sale contracts, and inheritance documentation."},{c:"3007B",m:false,n:"Full account history showing the fiat inflow pattern — particularly important for structuring typologies where multiple smaller payments are the evidence."},{c:"3009B",m:false,n:"Fraud recall notice from the sending bank, adverse media on the originating account, or SECO/OFAC list entry for the counterparty — attach the source document in full."},{c:"3012B",m:false,n:"Customer KYC file including declared source of wealth — allows MROS to assess the gap between declared and actual financial behaviour."},{c:"3006B",m:false,n:"Current balance snapshot — required if the fiat inflow is still held in the custody account at the time of filing and a blocking action may be appropriate."}]},
+
+    {id:"s5",icon:"🌀",name:"S5 · Gateway Laundering — Fiat-to-Crypto + Withdrawal",typology:"Gateway Laundering",
+     summary:"Customer uses recently deposited fiat (often from S4) to execute a large crypto purchase, then immediately attempts to withdraw 100% of the purchased amount to a self-hosted external wallet. The VASP is used purely as a fiat-to-crypto conversion gateway — 'Pass-Through' behaviour with no investment intent.",
+     vCodes:[{c:"1004V",l:"Fraud — MOST COMMON. Proceeds from phishing, romance scams, investment fraud being converted to crypto to obscure origin"},{c:"1206V",l:"Money laundering (general) — PRIMARY when purchase is clearly a layering step but no specific predicate can be established"},{c:"1014V",l:"Financing terrorism — MANDATORY if TF. Purchase funded by sanctioned individual or purchased asset intended for TF-linked wallet. Always file with 1116V"},{c:"1116V",l:"International sanctions — MANDATORY if sanctions. Fiat source account or intended destination wallet on SECO/OFAC/UN/EU lists"},{c:"1003V",l:"Unauthorized data access — fiat used for purchase traced to hacked account or stolen credentials: purchase is layering step after placement"},{c:"1007V",l:"Extortion — fiat originates from ransomware payment or extortion scheme: purchase converts criminal proceeds to crypto for further laundering"},{c:"1139V",l:"Corruption — customer is PEP or linked to public official and fiat source is unexplained or inconsistent with known income"},{c:"1130V",l:"Aggravated tax misdemeanor — MANDATORY if SOW reveals undeclared assets >CHF 300k being used to fund crypto purchase"},{c:"1013V",l:"Criminal organisation — multiple accounts purchase same asset simultaneously from same IP/device: coordinated layering by organised group"},{c:"1207V",l:"Termination (Art. 9b AMLA) — TECHNICAL CODE. Always file with 0024M when relationship terminated as result of mandatory VA purchase report"},{c:"1131V",l:"Not classifiable — last resort when purchase is clearly suspicious but no specific predicate can be established"}],
+     gCodes:[{c:"2018G",l:"Transaction monitoring — MANDATORY. TMS alert covering the purchase event. Document rule, alert ID, whether alert covered fiat leg, VA allocation, or both. Reference S4 alert if linked"},{c:"2022G",l:"Economic background — MANDATORY. Source of funds mismatch: fiat used for purchase inconsistent with declared income, business, or SOW profile"},{c:"2008G",l:"Currency exchange — MANDATORY. Fiat-to-VA conversion is itself a currency exchange event. Document exchange rate, asset purchased, and whether it is a privacy coin or high-risk asset"},{c:"2013G",l:"High-risk countries — fiat originated from high-risk jurisdiction or purchased VA intended for wallet in sanctioned/embargoed country"},{c:"2017G",l:"Smurfing — purchase split across multiple smaller buy orders to stay below internal thresholds: structuring via purchase function"},{c:"2004G",l:"Transitory / suspense account — MANDATORY when purchased VA immediately transferred externally: custody account used purely as pass-through conversion point"},{c:"2006G",l:"Opening of account — account recently opened and VA purchase is first or only transaction: purpose-built account for single conversion event"},{c:"2103G",l:"Termination (Art. 9b) — MANDATORY when VA purchase leads directly to account closure. Always present in 0024M follow-up filing"}],
+     mCodes:[{c:"0002M",l:"Art. 9 §1a AMLA — PRIMARY. Core mandatory for purchase leg: source of funds unverified, customer HIGH/MEDIUM risk, or purchase inconsistent with declared profile. Link BOTH fiat debit and VA allocation"},{c:"0003M",l:"Art. 9 §1b AMLA — PRIMARY. Fiat used for purchase confirmed derived from specific predicate offence (purchase is placement-stage transaction)"},{c:"0004M",l:"Art. 9 §1c AMLA — PRIMARY if TF. Purchased asset destined for TF-linked wallet or fiat source linked to sanctioned individual/terrorist entity"},{c:"0005M",l:"Art. 16 §1a AMLA — PRIMARY if onboarding fails. Customer attempts purchase during onboarding and KYC is refused or fails"},{c:"0001M",l:"Art. 305ter §2 SCC — SITUATIONAL. Fully KYC'd LOW-risk retail where specific purchase is unusual but below Art. 9 threshold"},{c:"0024M",l:"Art. 9b AMLA — FOLLOW-UP. File when relationship terminated following mandatory report on VA purchase. Cross-reference S4 STR filing ID if fiat leg reported separately"},{c:"0023M",l:"Art. 305ter §2bis SCC — FOLLOW-UP. File when relationship terminated following voluntary 0001M report on this purchase"}],
+     example:"On 12.04.2026, our TMS flagged a purchase of 1.21 BTC and 15,000 USDC (Order Execution ID: EXE-77210-ND) using a recently deposited balance of CHF 88,000. Velocity monitoring indicates the client attempted to immediately withdraw 100% of the purchased BTC to external self-hosted wallet 0xbc1...99ef following execution. The client was unable to justify the scale and timing of the purchase, eventually requesting immediate account closure and return of funds to a different bank account — further validating the suspicion of pass-through laundering.",
+     codes:[{c:"3008B",m:true,n:"MANDATORY. BOTH transaction legs required: (1) the fiat debit from the custody account, and (2) the VA allocation event — asset type, amount in crypto, CHF equivalent, timestamp, and internal order ID."},{c:"3010B",m:true,n:"MANDATORY. Internal documentation covering the SOW review, the customer's stated purpose for the purchase, and the analyst's assessment of why the purchase is suspicious."},{c:"3013B",m:true,n:"MANDATORY if EDD performed. Full EDD report on source of fiat funds — required for MEDIUM and HIGH-risk customers making significant VA purchases."},{c:"3009B",m:false,n:"KYT tool report if the purchased asset is immediately transferred to a flagged wallet. SECO/OFAC list entry if a sanctions match is identified. Fraud recall if the fiat source is disputed."},{c:"3007B",m:false,n:"Full account history showing both the fiat inflow pattern and the VA purchase history — essential when the STR covers the S4+S5 chain as a single report."},{c:"3012B",m:false,n:"Full KYC file including risk rating, declared SOW, and any previous STRs or EDD reviews on the same customer."},{c:"3006B",m:false,n:"Asset snapshot at reporting date — both fiat and crypto balances. Required if a blocking action is triggered on the purchased VA."},{c:"3023B",m:false,n:"Mandatory on relationship termination — attach with 0024M follow-up filing confirming the final crypto and fiat balance at account closure."},{c:"3014B",m:false,n:"Attach if the fiat custody account was already debited or the VA already transferred before the blocking action — documents the residual balance and confirms what assets remain."}]}
+  ],
+  SAR:[
+    {id:"sa",icon:"📰",name:"SAR-A · Adverse Media / External Intelligence",typology:"Adverse Media / External Intelligence",
+     summary:"A screening run, periodic review, or third-party tip surfaces credible negative intelligence about the client — adverse media, World-Check hit, fraud recall, or prosecution authority notification. No transaction trigger is required. The SAR documents the discovery and compliance decision without alerting the client (tipping-off prohibition).",
+     vCodes:[{c:"1004V",l:"Fraud — MOST COMMON. Adverse media involving scams, Ponzi schemes, phishing, or misrepresentation cases"},{c:"1139V",l:"Corruption — media links client to bribery of public officials or PEP-related corruption cases"},{c:"1130V",l:"Tax misdemeanor — MANDATORY if intelligence indicates tax evasion >CHF 300k in single period"},{c:"1013V",l:"Criminal organisation — media/intelligence links client to organised criminal network, money mule cell, or structured crime group"},{c:"1147V",l:"Bankruptcy/debt crimes — intelligence indicates concealment of assets or fraudulent bankruptcy proceedings"},{c:"1141V",l:"Market manipulation — adverse media involves insider trading, wash trading, or fictitious market transactions"},{c:"1206V",l:"Money laundering (general) — use when media confirms laundering activity but predicate offence cannot be specifically identified"},{c:"1131V",l:"Not classifiable — last resort when credible suspicion exists but no specific offence category matches the intelligence"}],
+     gCodes:[{c:"2023G",l:"Adverse media — MANDATORY. Always present when trigger is a negative news report, World-Check hit, or public record on the client"},{c:"2009G",l:"Third-party information — MANDATORY. Use alongside 2023G when intelligence comes from external source: fraud recall, victim report, or whistleblower tip"},{c:"2011G",l:"Information from prosecution — official inquiry, freezing order, or notification from police/prosecutors on another account revealing link to current client"},{c:"2015G",l:"MROS-Info (Art. 11a §2) — when MROS proactively shares information about prior report involving same client or related party"},{c:"2022G",l:"Economic background — adverse media reveals mismatch between declared profile and scale of assets or transactions on account"},{c:"2018G",l:"Transaction monitoring — adverse media hit corroborated by simultaneous TM alert on the account"}],
+     mCodes:[{c:"0002M",l:"Art. 9 §1a AMLA — PRIMARY. Well-founded suspicion from credible adverse media. Use when external source is reliable and link to client's assets is established"},{c:"0003M",l:"Art. 9 §1b AMLA — PRIMARY. Use when adverse media or intelligence identifies a specific predicate offence (fraud, corruption, embezzlement) connected to client"},{c:"0001M",l:"Art. 305ter §2 SCC — SITUATIONAL. Media hit present but not fully corroborated — slight suspicion only. Right to report rather than legal duty"},{c:"0009M",l:"Art. 11a §1&3 AMLA — SITUATIONAL. External trigger is a formal MROS RFI on the client rather than media or a tip"},{c:"0010M",l:"Art. 11a §2&3 AMLA — SITUATIONAL. Intelligence comes from another Swiss bank or VASP sharing information under information-sharing regime"},{c:"0024M",l:"Art. 9b AMLA — FOLLOW-UP. File when relationship terminated as result of mandatory report triggered by adverse media"},{c:"0023M",l:"Art. 305ter §2bis SCC — FOLLOW-UP. File when relationship terminated following voluntary 0001M report"}],
+     example:"On 18.04.2026, during a daily name screening process, the monitoring team identified that the client is subject to an active criminal probe for fraud. A review of the file shows the client's declared profession as Software Engineer does not align with the reported criminal allegations. The business relationship has been blocked for all outgoing transfers. No ownership verification was requested at this stage to prevent a breach of the tipping-off prohibition. Case escalated for reporting under Art. 9 §1a AMLA (0002M).",
+     codes:[{c:"3009B",m:true,n:"MANDATORY. The adverse media article, World-Check record, or official document that triggered the SAR. Must be attached in full."},{c:"3010B",m:true,n:"MANDATORY. Internal analyst note documenting how the external intelligence was assessed and linked to the client's assets."},{c:"3007B",m:false,n:"Transaction history showing activity relevant to the period covered by the adverse media or intelligence."},{c:"3006B",m:false,n:"Current asset snapshot as of the reporting date — mandatory if a blocking event is also triggered."},{c:"3012B",m:false,n:"Full KYC file to allow MROS to assess whether the intelligence is consistent with or contradicts the declared profile."},{c:"3013B",m:false,n:"Attach if an EDD review was triggered by the intelligence — attach the full enhanced due diligence report."},{c:"3017B",m:false,n:"Attach ONLY if the trigger was a formal MROS RFI — documentation responding to that specific request."},{c:"3018B",m:false,n:"Attach if the intelligence came from another Swiss FI under the information-sharing regime (Art. 11a §2&3 AMLA)."}]},
+
+    {id:"sb",icon:"🚫",name:"SAR-B · Sanctions / TF Match",typology:"Sanctions / Terrorist Financing Match",
+     summary:"Name screening against SECO, OFAC, UN, or EU lists returns a true positive match against the client or beneficial owner. All assets must be blocked immediately. The SAR documents the match, identity confirmation, and blocking decision. A 0024M follow-up is mandatory upon relationship termination.",
+     vCodes:[{c:"1014V",l:"Financing terrorism — MANDATORY for TF. Always present when SAR involves any link to terrorist financing, extremist groups, or designated terrorist individuals"},{c:"1116V",l:"International sanctions — MANDATORY for sanctions. Always present when trigger is direct or indirect match with SECO/UN/EU/OFAC consolidated lists"},{c:"1022V",l:"Al-Qaeda / IS groups — MANDATORY when match involves Al-Qaeda, ISIS, or their direct affiliates. Use in addition to 1014V"},{c:"1166V",l:"Terrorist training — funds financing travel or training for terrorist activities rather than direct operational financing"},{c:"1016V",l:"Misconduct in public office — sanctions match relates to violation of international sanctions by public official or state-linked entity"},{c:"1139V",l:"Corruption — sanctioned individual is also a PEP with associated corruption exposure: common in state-sponsored sanctions cases"},{c:"1073V",l:"Endangering public safety with weapons — sanctions or TF link involves arms trafficking, weapons proliferation, or dual-use goods"},{c:"1206V",l:"Money laundering (general) — add as secondary when sanctions match confirms asset laundering beyond the TF designation itself"},{c:"1207V",l:"Termination (Art. 9b AMLA) — MANDATORY TECHNICAL CODE. Documents relationship termination as result of sanctions/TF finding. Always file with 0024M"}],
+     gCodes:[{c:"2018G",l:"Transaction monitoring — MANDATORY. Sanctions screening is automated monitoring. Document the screening system, list version, and match details"},{c:"2013G",l:"High-risk countries — MANDATORY if applicable. Sanctions match involves jurisdiction subject to SECO embargo, FATF black/grey list, or UN sanctions regime"},{c:"2023G",l:"Adverse media — sanctions match corroborated by or first identified through adverse media or public intelligence on individual/entity"},{c:"2011G",l:"Information from prosecution — TF link identified through official notification from fedpol, cantonal police, or judicial authority"},{c:"2009G",l:"Third-party information — initial alert came from external source: another institution, law enforcement tip, or international FIU"},{c:"2103G",l:"Termination (Art. 9b) — MANDATORY. Always present when sanctions/TF finding leads directly to account closure"}],
+     mCodes:[{c:"0004M",l:"Art. 9 §1c AMLA — PRIMARY. Mandatory code for all TF-related SARs. Use whenever client is linked to terrorist financing, extremist organisations, or designated terrorist entities"},{c:"0002M",l:"Art. 9 §1a AMLA — PRIMARY. File alongside 0004M for general ML/criminal origin suspicion: sanctions matches involve both TF risk and broader asset criminality"},{c:"0003M",l:"Art. 9 §1b AMLA — SITUATIONAL. Sanctions match linked to specific predicate felony beyond TF (e.g. designated individual also known for drug trafficking or corruption)"},{c:"0024M",l:"Art. 9b AMLA — MANDATORY FOLLOW-UP. Relationship must be terminated following sanctions/TF mandatory report. File 0024M immediately upon closure — do not delay"}],
+     example:"On 15.04.2026, during a daily name screening process, the monitoring team identified that the client is now listed on the SECO consolidated sanctions list. All identity documents were reviewed to confirm the match is not a false positive. The full asset snapshot as of the match date (3006B) is attached. The business relationship has been frozen pending MROS instructions, and a 0024M termination filing is being prepared with final balance confirmation (3023B).",
+     codes:[{c:"3009B",m:true,n:"MANDATORY. The sanctions list entry, World-Check record, or SECO/OFAC/UN designation document that triggered the match. Must be attached in full with the list version and date."},{c:"3001B",m:true,n:"MANDATORY. All identity documents of the matched individual — passport, ID card, corporate registration — to confirm the match is not a false positive."},{c:"3010B",m:true,n:"MANDATORY. Internal record documenting the screening process, the match assessment (true vs false positive), and the decision to file."},{c:"3006B",m:true,n:"MANDATORY. Full asset snapshot as of the date of the sanctions match — required to support any blocking action and the termination report."},{c:"3007B",m:false,n:"Full transaction history. MROS will assess whether funds have already moved prior to the match being identified."},{c:"3012B",m:false,n:"Full KYC file including onboarding documents, Form A (beneficial owner), and any EDD reports."},{c:"3005B",m:false,n:"Beneficial ownership chain — critical for entity sanctions matches where the designation may apply through indirect control."},{c:"3023B",m:false,n:"MANDATORY on termination. Official proof of the remaining balance at the time the relationship was closed. Required for the 0024M follow-up filing."},{c:"3014B",m:false,n:"Attach if the account was already debited or assets moved before the blocking action — documents the residual balance."}]},
+
+    {id:"sc",icon:"🚪",name:"SAR-C · Aborted / Failed Onboarding",typology:"Aborted / Refused Onboarding",
+     summary:"A prospect abandons the onboarding process at the AML documentation stage — typically refusing to provide Source of Wealth or identity documents. The refusal itself is the trigger. No assets are held but a SAR is filed under Art. 16 §1a AMLA. Forged documents submitted before abandonment must be attached.",
+     vCodes:[{c:"1004V",l:"Fraud — MOST LIKELY. Prospect refusing SOW is a classic fraud indicator: funds likely from scam proceeds or misrepresented origin"},{c:"1138V",l:"Forgery of documents — MANDATORY if applicable. Prospect provided any documents before abandoning: fake IDs, falsified bank statements, tampered SOW proofs"},{c:"1013V",l:"Criminal organisation — refusal pattern suggests money mule or structured onboarding attempt by organised group"},{c:"1131V",l:"Not classifiable — last resort when high suspicion exists but no specific offence can be identified from available information"}],
+     gCodes:[{c:"2006G",l:"Opening of account — MANDATORY. Red flags identified during onboarding: inconsistent documentation or suspicious behaviour at account setup. Always present in aborted relationship SARs"},{c:"2007G",l:"Forgery — MANDATORY if applicable. Any documents submitted and found to be forged or tampered before prospect abandoned the process"},{c:"2022G",l:"Economic background — declared profile (profession, income, source of wealth) is implausible or inconsistent before the abandonment"},{c:"2023G",l:"Adverse media — abandonment triggered by Nu's own screening returning negative news on the prospect"},{c:"2009G",l:"Third-party information — another institution or fraud recall flagged the prospect before or during onboarding"}],
+     mCodes:[{c:"0005M",l:"Art. 16 §1a AMLA — PRIMARY. Core code for failed/refused onboarding. Use when prospect abandons process specifically at AML documentation stage"},{c:"0003M",l:"Art. 9 §1b AMLA — PRIMARY. Aborted onboarding linked to specific predicate offence known at time (e.g. fraud proceeds suspected). File alongside 0005M"},{c:"0002M",l:"Art. 9 §1a AMLA — SITUATIONAL. General ML suspicion exists beyond just the aborted onboarding (e.g. prior adverse media on the prospect)"}],
+     example:"On 20.04.2026, during the processing of a new onboarding application, the monitoring team identified that the prospect refused to provide Source of Wealth documentation at the AML stage. World-Check screening returned a match to a fraud-related adverse media article. The partial KYC collected before abandonment is attached as 3012B, and the World-Check output is attached as 3009B. SAR filed under Art. 16 §1a AMLA (0005M).",
+     codes:[{c:"3002B",m:true,n:"MANDATORY. Document showing the onboarding was initiated — application form, initial data capture, date/time of attempt."},{c:"3010B",m:true,n:"MANDATORY. Internal record documenting what AML question triggered the abandonment and the analyst's assessment."},{c:"3001B",m:false,n:"Any ID submitted by the prospect before abandonment — including forged or suspicious documents."},{c:"3009B",m:false,n:"World-Check results, adverse media printouts, or screening outputs that contributed to identifying the risk."},{c:"3012B",m:false,n:"Any partial KYC collected before the prospect abandoned — even incomplete records must be attached."}]},
+
+    {id:"sd",icon:"🔎",name:"SAR-D · KYC Discrepancy — Periodic Review",typology:"KYC Discrepancy / Profile Mismatch",
+     summary:"A periodic KYC review reveals that the client's actual financial behaviour — volumes, asset levels, business activities — is materially inconsistent with their declared onboarding profile. The SAR must include both the 'before' and 'after' KYC picture so MROS can assess the full extent of the discrepancy.",
+     vCodes:[{c:"1004V",l:"Fraud — MOST COMMON. KYC discrepancy often indicates client misrepresented profile at onboarding: fraudulent inducement to establish relationship"},{c:"1138V",l:"Forgery of documents — MANDATORY if applicable. SOW documentation, payslips, corporate records, or identity documents found forged or tampered during review"},{c:"1126V",l:"Investment Schemes Act — review reveals client managing unlicensed investment funds or acting as unregistered FINMA-regulated entity"},{c:"1139V",l:"Corruption — discrepancy reveals PEP exposure, undeclared public office, or assets inconsistent with declared public sector income"},{c:"1130V",l:"Tax misdemeanor — SOW review suggests undisclosed assets or income indicating tax evasion >CHF 300k"},{c:"1008V",l:"Criminal mismanagement — client manages third-party assets as fiduciary and review reveals misappropriation or churning"},{c:"1131V",l:"Not classifiable — discrepancy is severe but specific predicate cannot be identified from available KYC information"}],
+     gCodes:[{c:"2022G",l:"Economic background — MANDATORY. The defining factor for KYC discrepancy SARs: mismatch between declared income/profession and actual transaction volumes or asset levels"},{c:"2007G",l:"Forgery — use when periodic review identifies forged SOW documentation, tampered corporate records, or falsified identity materials"},{c:"2018G",l:"Transaction monitoring — KYC review was triggered by a TM alert. Document both the monitoring rule and resulting profile mismatch"},{c:"2016G",l:"Audit / supervisory board — discrepancy identified during internal or external audit rather than routine periodic review"},{c:"2023G",l:"Adverse media — adverse media contributed to identifying or confirming the KYC discrepancy during review"},{c:"2019G",l:"Trust activity — discrepancy involves complex structures: shell companies, undisclosed beneficial owners, or opaque fiduciary arrangements"},{c:"2010G",l:"Information from corporate group — discrepancy identified through internal data sharing between Nu Global entities or branches"}],
+     mCodes:[{c:"0001M",l:"Art. 305ter §2 SCC — PRIMARY (default). Suspicion arises from mismatch but no absolute proof of predicate offence yet exists. Right to report rather than legal duty"},{c:"0002M",l:"Art. 9 §1a AMLA — UPGRADE if profile mismatch is so extreme it cannot be legitimately explained: well-founded rather than slight suspicion of ML"},{c:"0003M",l:"Art. 9 §1b AMLA — use if discrepancy review surfaces a specific predicate offence link (e.g. client's real business confirmed as unlicensed investment scheme)"},{c:"0023M",l:"Art. 305ter §2bis SCC — FOLLOW-UP. File when relationship terminated after voluntary 0001M SAR on the discrepancy"},{c:"0024M",l:"Art. 9b AMLA — FOLLOW-UP. File when relationship terminated after mandatory 0002M/0003M report triggered by KYC review findings"}],
+     example:"On 22.04.2026, during a periodic KYC review, the monitoring team identified that the client's declared profession as Hospitality Employee does not align with evidence of shell company ownership discovered via public corporate registry records. The KYC file before the review and the updated post-review KYC are both attached separately. EDD was conducted and the full report is enclosed as 3013B. SAR filed under Art. 305ter §2 SCC (0001M), with potential upgrade to Art. 9 §1a AMLA pending further investigation.",
+     codes:[{c:"3012B",m:true,n:"MANDATORY. The full KYC file as it stood BEFORE and AFTER the review — MROS needs to see both the declared and the discovered profile."},{c:"3010B",m:true,n:"MANDATORY. Internal documentation of the periodic review process, the specific discrepancy identified, and the analyst's conclusions."},{c:"3013B",m:true,n:"MANDATORY if EDD performed. Attach the full EDD report triggered by the discrepancy finding."},{c:"3004B",m:false,n:"Attach the original Form A (beneficial owner) and any updated versions — discrepancies in UBO declaration are highly relevant."},{c:"3005B",m:false,n:"Corporate structure documents, shareholder registers, or UBO declarations that conflict with the declared profile."},{c:"3007B",m:false,n:"Transaction history showing volumes inconsistent with the declared income or business activity."},{c:"3009B",m:false,n:"Any external evidence confirming the discrepancy — public registry records, corporate filings, or media showing the client's true activities."}]}
+  ]
+};
+
+let curType=null,curScen=null,files=[],curStep=1;
+function today(){return new Date().toISOString().slice(0,10);}
+document.getElementById('repDate').value=today();
+
+const dz=document.getElementById('dz');
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.style.borderColor='#820AD1';dz.style.background='#f5f3ff';});
+dz.addEventListener('dragleave',()=>{dz.style.borderColor='#d1c4e9';dz.style.background='';});
+dz.addEventListener('drop',e=>{e.preventDefault();dz.style.borderColor='#d1c4e9';dz.style.background='';addFiles(e.dataTransfer.files);});
+
+function goStep(n){
+  curStep=n;
+  ['s1','s2','s3'].forEach((id,i)=>document.getElementById(id).style.display=(i+1===n?'block':'none'));
+  document.getElementById('resetBtn').style.display=n>1?'':'none';
+  [1,2,3].forEach(i=>{
+    const d=document.getElementById('d'+i),l=document.getElementById('l'+i);
+    if(i<n){d.style.cssText='background:#820AD1;border-color:#820AD1;color:#fff;';d.textContent='✓';l.style.cssText='color:#1a1a2e;font-weight:500;font-size:13px;';}
+    else if(i===n){d.style.cssText='background:#f5f3ff;border-color:#820AD1;color:#820AD1;';d.textContent=i;l.style.cssText='color:#1a1a2e;font-weight:600;font-size:13px;';}
+    else{d.style.cssText='background:#f5f3ff;border-color:#d1c4e9;color:#9ca3af;';d.textContent=i;l.style.cssText='color:#9ca3af;font-weight:400;font-size:13px;';}
+  });
+}
+
+function pickType(t){curType=t;renderScenarios();goStep(2);}
+
+function renderScenarios(){
+  const list=document.getElementById('scenList');list.innerHTML='';
+  SC[curType].forEach(sc=>{
+    const btn=document.createElement('button');
+    btn.className='scen-btn';btn.onclick=()=>pickScenario(sc);
+    const bReq=sc.codes.filter(c=>c.m).map(c=>`<span class="tag-m">${c.c}</span>`).join('');
+    const bOpt=sc.codes.filter(c=>!c.m).map(c=>`<span class="tag-o">${c.c}</span>`).join('');
+    btn.innerHTML=`
+      <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;">
+        <span style="font-size:22px;flex-shrink:0;margin-top:1px;">${sc.icon}</span>
+        <div>
+          <div style="font-size:13px;font-weight:700;color:#1a1a2e;margin-bottom:2px;">${sc.name}</div>
+          <div style="font-size:11px;color:#7c3aed;font-weight:600;letter-spacing:.3px;text-transform:uppercase;">MROS Typology: ${sc.typology}</div>
+        </div>
+      </div>
+      <div style="font-size:12px;color:#374151;line-height:1.55;margin-bottom:10px;padding:10px;background:#f5f3ff;border-radius:8px;border-left:3px solid #820AD1;">${sc.summary}</div>
+      <div style="font-size:11px;color:#6b7280;font-style:italic;margin-bottom:10px;padding:8px 10px;background:#fafafa;border-radius:7px;border:1px solid #f0ebfa;line-height:1.5;">💬 <em>${sc.example.substring(0,180)}…</em></div>
+      <div style="display:flex;flex-direction:column;gap:5px;">
+        <div class="codes-row"><span class="codes-row-label">V-Codes</span>${sc.vCodes.slice(0,3).map(x=>`<span class="tag-v" title="${x.l}">${x.c}</span>`).join('')}${sc.vCodes.length>3?`<span style="font-size:10px;color:#9ca3af;font-family:monospace;">+${sc.vCodes.length-3}</span>`:''}</div>
+        <div class="codes-row"><span class="codes-row-label">G-Codes</span>${sc.gCodes.slice(0,3).map(x=>`<span class="tag-g" title="${x.l}">${x.c}</span>`).join('')}${sc.gCodes.length>3?`<span style="font-size:10px;color:#9ca3af;font-family:monospace;">+${sc.gCodes.length-3}</span>`:''}</div>
+        <div class="codes-row"><span class="codes-row-label">M-Codes</span>${sc.mCodes.slice(0,3).map(x=>`<span class="tag-legal" title="${x.l}">${x.c}</span>`).join('')}</div>
+        <div class="codes-row" style="padding-top:6px;margin-top:2px;border-top:1px solid #f0ebfa;"><span class="codes-row-label">B-Codes</span>${bReq}${bOpt}</div>
+      </div>`;
+    list.appendChild(btn);
+  });
+}
+
+function pickScenario(sc){
+  curScen=sc;
+  document.getElementById('scenLbl').textContent=sc.name;
+  const panel=document.getElementById('scenPanel');panel.style.display='block';
+  document.getElementById('panelTitle').textContent=`${sc.icon} ${sc.name} — ${sc.typology}`;
+  document.getElementById('panelSummary').textContent=sc.summary;
+  document.getElementById('panelVCodes').innerHTML=sc.vCodes.map(x=>`<span class="tag-v" title="${x.l}" style="cursor:help;">${x.c}</span>`).join('');
+  document.getElementById('panelGCodes').innerHTML=sc.gCodes.map(x=>`<span class="tag-g" title="${x.l}" style="cursor:help;">${x.c}</span>`).join('');
+  document.getElementById('panelMCodes').innerHTML=sc.mCodes.map(x=>`<span class="tag-legal" title="${x.l}" style="cursor:help;">${x.c}</span>`).join('');
+  document.getElementById('panelExample').textContent=sc.example;
+  renderAll();goStep(3);
+}
+
+function buildName(date,code,desc,toPdf,origExt){
+  const d=date.replace(/-/g,'');
+  const safe=(desc||'').trim().replace(/\s+/g,'_').replace(/[^a-zA-Z0-9_\-]/g,'').substring(0,40);
+  return `${d}_${code}_${safe}.${toPdf?'pdf':(origExt||'pdf')}`;
+}
+function getExt(f){return f.name.split('.').pop().toLowerCase();}
+function isImg(f){return f.type.startsWith('image/');}
+function isPdf(f){return f.type==='application/pdf';}
+
+
+function renderChecklist(covered){
+  const el=document.getElementById('evidenceChecklist');
+  if(!curScen||files.length===0){el.style.display='none';return;}
+  el.style.display='block';
+
+  const reqCodes=curScen.codes.filter(c=>c.m);
+  const optCodes=curScen.codes.filter(c=>!c.m);
+  const reqMissing=reqCodes.filter(c=>!covered.has(c.c));
+  const reqDone=reqCodes.filter(c=>covered.has(c.c));
+  const optDone=optCodes.filter(c=>covered.has(c.c));
+
+  const allReqDone=reqMissing.length===0;
+  const anyFile=files.length>0;
+  const hasCodedFiles=files.some(f=>f.code);
+
+  let cardClass, icon, title, sub, progColor;
+  if(!hasCodedFiles){
+    cardClass='empty'; icon='📂';
+    title='Assign B-Codes to your files';
+    sub='Use the dropdowns on each file card below to assign a B-Code — the checklist will update automatically.';
+    progColor='#d1c4e9';
+  } else if(allReqDone){
+    cardClass='complete'; icon='✅';
+    title='All mandatory evidence is covered';
+    sub=`${reqDone.length} mandatory B-Code${reqDone.length!==1?'s':''} assigned · ${optDone.length} optional covered · Ready to upload to goAML.`;
+    progColor='#16a34a';
+  } else {
+    const pct=Math.round((reqDone.length/reqCodes.length)*100);
+    if(pct===0){cardClass='incomplete';icon='⛔';}
+    else{cardClass='partial';icon='⚠️';}
+    title=reqMissing.length===1?`1 mandatory B-Code still missing`:`${reqMissing.length} mandatory B-Codes still missing`;
+    sub=`${reqDone.length}/${reqCodes.length} mandatory covered · Attachments tab in goAML will remain Red until all required files are uploaded.`;
+    progColor=pct===0?'#dc2626':'#d97706';
+  }
+
+  const totalCodes=curScen.codes.length;
+  const totalDone=covered.size;
+  const pctNum=totalCodes>0?Math.round((totalDone/totalCodes)*100):0;
+
+  let rowsHtml='';
+  // Required codes first
+  curScen.codes.filter(c=>c.m).forEach(({c,m,n})=>{
+    const done=covered.has(c);
+    rowsHtml+=`<div class="chk-row">
+      <span class="chk-icon">${done?'✅':'❌'}</span>
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+          <span class="chk-label">${BCAT[c]}</span>
+          <span class="chk-badge ${done?'done':'req'}">${done?'✓ '+c:c+' · REQUIRED'}</span>
+        </div>
+        <div class="chk-sub">${n}</div>
+      </div>
+    </div>`;
+  });
+
+  // Optional codes
+  if(optCodes.length>0){
+    rowsHtml+=`<div style="font-size:10px;font-family:monospace;color:#9ca3af;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:8px 0 4px;">Optional evidence</div>`;
+    curScen.codes.filter(c=>!c.m).forEach(({c,m,n})=>{
+      const done=covered.has(c);
+      rowsHtml+=`<div class="chk-row" style="opacity:${done?1:0.65}">
+        <span class="chk-icon">${done?'✅':'○'}</span>
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+            <span class="chk-label" style="${done?'':'color:#6b7280;font-weight:500;'}">${BCAT[c]}</span>
+            <span class="chk-badge ${done?'done':'opt'}">${done?'✓ '+c:c}</span>
+          </div>
+          <div class="chk-sub">${n}</div>
+        </div>
+      </div>`;
+    });
+  }
+
+  el.innerHTML=`<div class="checklist-card ${cardClass}">
+    <div class="status-bar">
+      <span class="status-icon">${icon}</span>
+      <div>
+        <div class="status-title" style="color:${cardClass==='complete'?'#166534':cardClass==='partial'?'#92400e':cardClass==='incomplete'?'#991b1b':'#374151'}">${title}</div>
+        <div class="status-sub" style="color:${cardClass==='complete'?'#15803d':cardClass==='partial'?'#b45309':cardClass==='incomplete'?'#b91c1c':'#6b7280'}">${sub}</div>
+      </div>
+    </div>
+    <div class="prog-wrap"><div class="prog-bar" style="width:${pctNum}%;background:${progColor};"></div></div>
+    ${rowsHtml}
+  </div>`;
+}
+function renderAll(){
+  if(!curScen)return;
+  const covered=new Set(files.map(f=>f.code).filter(Boolean));
+  const cov=curScen.codes.filter(c=>covered.has(c.c)).length;
+  document.getElementById('covStat').textContent=`${cov}/${curScen.codes.length} covered`;
+  renderChecklist(covered);
+
+  const cl=document.getElementById('codeList');cl.innerHTML='';
+  curScen.codes.forEach(({c,m,n})=>{
+    const isCov=covered.has(c);
+    const row=document.createElement('div');row.className='crow';
+    row.innerHTML=`<span class="${isCov?'tag-c':m?'tag-m':'tag-o'}" style="flex-shrink:0;margin-top:1px;">${isCov?'✓ '+c:c}</span>
+    <div style="min-width:0;">
+      <div style="font-size:12px;font-weight:600;color:#1a1a2e;">${BCAT[c]}${m&&!isCov?' <span style="font-size:10px;color:#dc2626;font-weight:400;margin-left:4px;">REQUIRED</span>':''}</div>
+      <div style="font-size:11px;color:#6b7280;margin-top:2px;line-height:1.4;">${n}</div>
+    </div>`;
+    cl.appendChild(row);
+  });
+
+  const fl=document.getElementById('flist');fl.innerHTML='';
+  const ready=files.filter(f=>f.code&&f.desc);
+  const dlCard=document.getElementById('dlAll');dlCard.style.display=ready.length>1?'block':'none';
+  if(ready.length>1){
+    const miss=curScen.codes.filter(c=>c.m&&!covered.has(c.c)).map(c=>c.c);
+    document.getElementById('dlAllSub').innerHTML=`${ready.length} file(s) configured${miss.length?` · <span style="color:#d97706;">mandatory not yet assigned: ${miss.join(', ')}</span>`:''}`;
+  }
+  document.getElementById('warn3010').style.display=(!files.some(f=>f.code==='3010B')&&curScen)?'block':'none';
+
+  files.forEach((f,i)=>{
+    const ext=getExt(f.file);
+    const nameOrig=f.code&&f.desc?buildName(document.getElementById('repDate').value,f.code,f.desc,false,ext):'';
+    const sel=curScen.codes.find(x=>x.c===f.code);
+    const card=document.createElement('div');
+    card.className=`fcard${(f.statusOrig==='done'||f.statusPdf==='done')&&!(f.statusOrig==='err'||f.statusPdf==='err')?' done':(f.statusOrig==='err'||f.statusPdf==='err')?' err':''}`;
+    let dlRowHtml='';
+    if(nameOrig){
+      const oc=(f.statusOrig==='done')?'#16a34a':(f.statusOrig==='err')?'#dc2626':'#820AD1';
+      const ol=(f.statusOrig==='done')?`✓ .${ext.toUpperCase()}`:(f.statusOrig==='err')?'Retry':`⬇ .${ext.toUpperCase()}`;
+      const pc=(f.statusPdf==='done')?'#16a34a':(f.statusPdf==='err')?'#dc2626':'#5b21b6';
+      const pl=(f.statusPdf==='done')?'✓ PDF':(f.statusPdf==='err')?'Retry':'⬇ PDF';
+      dlRowHtml=`<div style="margin-top:8px;"><div class="preview" style="margin-bottom:6px;">${nameOrig}</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="btn-dl" onclick="dlFile(${i},'orig')" ${f.statusOrig==='processing'?'disabled':''} style="background:${oc};">${ol}</button>
+          ${(isImg(f.file)||!isPdf(f.file))?`<button class="btn-dl" onclick="dlFile(${i},'pdf')" ${f.statusPdf==='processing'?'disabled':''} style="background:${pc};">${pl}</button>`:''}
+        </div>
+        ${f.statusOrig==='err'?`<p style="font-size:11px;color:#dc2626;margin-top:4px;">${f.errorOrig||'Error'}</p>`:''}
+        ${f.statusPdf==='err'?`<p style="font-size:11px;color:#dc2626;margin-top:4px;">${f.errorPdf||'PDF error'}</p>`:''}
+      </div>`;
+    }
+    card.innerHTML=`
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div style="display:flex;align-items:center;gap:7px;min-width:0;">
+          <span style="font-size:16px;">${isPdf(f.file)?'📄':isImg(f.file)?'🖼️':'📎'}</span>
+          <span style="font-size:12px;font-family:monospace;color:#6b7280;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:220px;">${f.file.name}</span>
+          <span style="font-size:10px;font-family:monospace;color:#9ca3af;text-transform:uppercase;">.${ext}</span>
+        </div>
+        <button onclick="removeFile(${i})" style="background:none;border:none;color:#9ca3af;cursor:pointer;font-size:16px;padding:0 4px;" onmouseover="this.style.color='#dc2626'" onmouseout="this.style.color='#9ca3af'">✕</button>
+      </div>
+      ${!f.code?'<div style="font-size:11px;color:#b45309;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:6px 10px;margin-bottom:8px;">⚠ Select a B-Code — the description will be auto-filled in English based on the document type.</div>':''}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:${sel?'0':'10px'};">
+        <div><label class="lbl">B-Code</label>
+          <select onchange="updateFile(${i},'code',this.value)">
+            <option value="">— Select —</option>
+            ${curScen.codes.map(({c,m})=>`<option value="${c}" ${f.code===c?'selected':''}>${m?'⚠ ':''}${c} · ${BCAT[c]}</option>`).join('')}
+          </select></div>
+        <div><label class="lbl">Description <span style="color:#9ca3af;font-weight:400;font-family:monospace;">(auto · editable)</span></label>
+          <input type="text" value="${f.desc.replace(/"/g,'&quot;')}" placeholder="Select a B-Code to auto-fill" onchange="updateFile(${i},'desc',this.value)" style="${!f.desc?'border-color:#f59e0b;background:#fffbeb;':''}">
+        </div>
+      </div>
+      ${sel?`<div class="note">💡 ${sel.n}</div>`:''}
+      ${dlRowHtml}`;
+    fl.appendChild(card);
+  });
+}
+
+// Standard English description suggestions per B-Code
+const BDESC={
+  "3001B":"Identification_Documents",
+  "3002B":"Relationship_Establishment",
+  "3004B":"Form_A_Beneficial_Owner",
+  "3005B":"Ownership_Control_Docs",
+  "3006B":"Balance_Overview",
+  "3007B":"Account_Statements",
+  "3008B":"Transaction_Details",
+  "3009B":"Evidence_of_Suspicion",
+  "3010B":"Clarification_Records",
+  "3012B":"KYC_Documentation",
+  "3013B":"EDD_Report",
+  "3014B":"Debit_Advice",
+  "3017B":"AMLA_Art11a_Response",
+  "3018B":"AMLA_Art11a_InfoSharing",
+  "3023B":"Proof_of_Balance_Art9b"
+};
+
+function addFiles(list){
+  // desc starts empty — will be auto-filled when B-Code is selected
+  Array.from(list).forEach(f=>{
+    files.push({file:f,code:'',statusOrig:'idle',errorOrig:null,statusPdf:'idle',errorPdf:null,desc:'',descEdited:false});
+  });
+  renderAll();
+}
+function removeFile(i){files.splice(i,1);renderAll();}
+function updateFile(i,k,v){
+  if(k==='code'){
+    files[i].code=v;
+    // Auto-suggest standard English description only if user hasn't manually edited it
+    if(!files[i].descEdited && v && BDESC[v]){
+      files[i].desc=BDESC[v];
+    }
+  } else if(k==='desc'){
+    files[i].desc=v;
+    files[i].descEdited=true; // Mark as manually edited — don't overwrite anymore
+  } else {
+    files[i][k]=v;
+  }
+  files[i].statusOrig='idle';files[i].errorOrig=null;
+  files[i].statusPdf='idle';files[i].errorPdf=null;
+  renderAll();
+}
+
+async function imgToPdf(file){
+  return new Promise((res,rej)=>{
+    const img=new Image(),url=URL.createObjectURL(file);
+    img.onload=()=>{
+      URL.revokeObjectURL(url);
+      const r=Math.min(794/img.width,1123/img.height,1);const cw=Math.round(img.width*r),ch=Math.round(img.height*r);
+      const cv=document.createElement('canvas');cv.width=cw;cv.height=ch;
+      const ctx=cv.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,cw,ch);ctx.drawImage(img,0,0,cw,ch);
+      cv.toBlob(blob=>{if(!blob)return rej(new Error('toBlob failed'));blob.arrayBuffer().then(buf=>{res(new Blob([makePdf(new Uint8Array(buf),cw,ch)],{type:'application/pdf'}));}).catch(rej);},'image/png');
+    };img.onerror=()=>{URL.revokeObjectURL(url);rej(new Error('Image load failed'));};img.src=url;
+  });
+}
+function makePdf(bytes,w,h){
+  const enc=new TextEncoder(),chunks=[];let pos=0;const o={};
+  const t=s=>{const b=enc.encode(s);chunks.push(b);pos+=b.length;};
+  const rb=b=>{chunks.push(b);pos+=b.length;};
+  t('%PDF-1.4\n%\xff\xff\xff\xff\n');o[1]=pos;t('1 0 obj\n<</Type/Catalog/Pages 2 0 R>>\nendobj\n');
+  o[2]=pos;t('2 0 obj\n<</Type/Pages/Kids[3 0 R]/Count 1>>\nendobj\n');
+  o[3]=pos;t(`3 0 obj\n<</Type/Page/Parent 2 0 R/MediaBox[0 0 ${w} ${h}]/Contents 4 0 R/Resources<</XObject<</I 5 0 R>>>>>>\nendobj\n`);
+  const s=`q ${w} 0 0 ${h} 0 0 cm /I Do Q`;o[4]=pos;t(`4 0 obj\n<</Length ${s.length}>>\nstream\n${s}\nendstream\nendobj\n`);
+  o[5]=pos;t(`5 0 obj\n<</Type/XObject/Subtype/Image/Width ${w}/Height ${h}/ColorSpace/DeviceRGB/BitsPerComponent 8/Length ${bytes.length}>>\nstream\n`);
+  rb(bytes);t('\nendstream\nendobj\n');const xp=pos;t('xref\n0 6\n0000000000 65535 f \n');
+  [1,2,3,4,5].forEach(n=>t(String(o[n]).padStart(10,'0')+' 00000 n \n'));
+  t(`trailer\n<</Size 6/Root 1 0 R>>\nstartxref\n${xp}\n%%EOF`);
+  const tot=chunks.reduce((s,c)=>s+c.length,0);const out=new Uint8Array(tot);let off=0;
+  chunks.forEach(c=>{out.set(c,off);off+=c.length;});return out;
+}
+function dlBlob(blob,name){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(()=>URL.revokeObjectURL(url),1000);}
+
+async function dlFile(i,mode){
+  const f=files[i];if(!f.code||!f.desc)return;
+  const ext=getExt(f.file),asPdf=(mode==='pdf');
+  const name=buildName(document.getElementById('repDate').value,f.code,f.desc,asPdf,ext);
+  if(asPdf){
+    files[i].statusPdf='processing';renderAll();
+    try{const blob=isImg(f.file)?await imgToPdf(f.file):new Blob([await f.file.arrayBuffer()],{type:'application/pdf'});dlBlob(blob,name);files[i].statusPdf='done';}
+    catch(e){files[i].statusPdf='err';files[i].errorPdf=e.message;}
+  }else{
+    files[i].statusOrig='processing';renderAll();
+    try{const blob=new Blob([await f.file.arrayBuffer()],{type:f.file.type});dlBlob(blob,name);files[i].statusOrig='done';}
+    catch(e){files[i].statusOrig='err';files[i].errorOrig=e.message;}
+  }renderAll();
+}
+async function downloadAllOriginal(){const idx=files.map((_,i)=>i).filter(i=>files[i].code&&files[i].desc);for(const i of idx){await dlFile(i,'orig');await new Promise(r=>setTimeout(r,300));}}
+async function downloadAllPdf(){const idx=files.map((_,i)=>i).filter(i=>files[i].code&&files[i].desc);for(const i of idx){await dlFile(i,'pdf');await new Promise(r=>setTimeout(r,300));}}
+function reset(){curType=null;curScen=null;files=[];goStep(1);}
+</script>
 </body>
 </html>
